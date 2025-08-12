@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Repeat, Home } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
-import type { useAchievements } from '@/hooks/use-achievements.tsx';
+import { useAchievements } from '@/hooks/use-achievements.tsx';
 
 type ResultsScreenProps = Pick<ReturnType<typeof useGameState>, 'score' | 'history' | 'startGame' | 'goToMenu'>;
 

@@ -100,7 +100,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                         <div className="relative w-6 h-6 rounded-full overflow-hidden">
                            <Image src={roundForCategory.country.flag} alt={roundForCategory.country.name} fill style={{ objectFit: 'cover' }} unoptimized/>
                         </div>
-                        <Badge variant="outline">#{roundForCategory.score}</Badge>
+                        <Badge variant="outline">#{roundForCategory.score > 100 ? '100+' : roundForCategory.score}</Badge>
                     </div>
                   )}
                 </Button>

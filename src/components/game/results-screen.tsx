@@ -40,7 +40,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, st
                         <round.selectedCategory.Icon className="h-4 w-4" />
                         <span>{round.country.name} in <span className="font-semibold">{round.selectedCategory.name}</span></span>
                     </div>
-                    <Badge variant="outline">Rank #{round.score}</Badge>
+                    <Badge variant="outline">Rank #{round.score > 100 ? '100+' : round.score}</Badge>
                 </div>
             ))}
             </div>

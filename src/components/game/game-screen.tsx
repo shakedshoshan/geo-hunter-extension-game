@@ -85,7 +85,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           )}
 
           <div className="grid grid-cols-2 gap-3 w-full pt-4">
-            {(gameCategories || []).map(category => {
+            {(Array.isArray(gameCategories) ? gameCategories : []).map(category => {
               const roundForCategory = history.find(h => h.selectedCategory.id === category.id);
               const isUsed = !!roundForCategory;
               

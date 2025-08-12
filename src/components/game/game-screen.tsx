@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
+import { cn } from '@/lib/utils';
 
 type GameScreenProps = ReturnType<typeof useGameState> & { expertMode: boolean };
 
@@ -68,6 +69,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 src={currentCountry.flag}
                 alt={`Flag of ${currentCountry.name}`}
                 data-ai-hint={`flag ${currentCountry.name}`}
+                className={cn(hasSelected && "animate-spin-once")}
                 fill
                 style={{ objectFit: 'cover' }}
                 priority

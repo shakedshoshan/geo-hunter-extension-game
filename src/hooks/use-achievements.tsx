@@ -54,48 +54,49 @@ export const useAchievements = () => {
   }, [achievements, isLoaded]);
 
   const checkAndUnlockAchievements = useCallback((finalScore: number) => {
-    const updatedGamesPlayed = achievements.gamesPlayed + 1;
-    const newUnlockedIds = new Set(achievements.unlockedIds);
-    const achievementsToToast: Achievement[] = [];
+    setAchievements(prev => {
+        const updatedGamesPlayed = prev.gamesPlayed + 1;
+        const newUnlockedIds = new Set(prev.unlockedIds);
+        const achievementsToToast: Achievement[] = [];
 
-    achievementsList.forEach(achievement => {
-      if (newUnlockedIds.has(achievement.id)) return;
+        achievementsList.forEach(achievement => {
+        if (newUnlockedIds.has(achievement.id)) return;
 
-      let unlocked = false;
-      if (achievement.type === 'score' && finalScore <= achievement.threshold) {
-        unlocked = true;
-      }
-      if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
-        unlocked = true;
-      }
+        let unlocked = false;
+        if (achievement.type === 'score' && finalScore <= achievement.threshold) {
+            unlocked = true;
+        }
+        if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
+            unlocked = true;
+        }
 
-      if (unlocked) {
-        newUnlockedIds.add(achievement.id);
-        achievementsToToast.push(achievement);
-      }
-    });
-
-    setAchievements(prev => ({
-        unlockedIds: newUnlockedIds,
-        gamesPlayed: updatedGamesPlayed,
-        bestScore: prev.bestScore === null ? finalScore : Math.min(prev.bestScore, finalScore),
-    }));
-
-    if (achievementsToToast.length > 0) {
-      achievementsToToast.forEach(a => {
-        toast({
-          title: (
-            <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-accent" />
-              <span>Achievement Unlocked!</span>
-            </div>
-          ),
-          description: a.title,
+        if (unlocked) {
+            newUnlockedIds.add(achievement.id);
+            achievementsToToast.push(achievement);
+        }
         });
-      });
-    }
 
-  }, [achievements.gamesPlayed, achievements.unlockedIds, toast]);
+        if (achievementsToToast.length > 0) {
+            achievementsToToast.forEach(a => {
+                toast({
+                title: (
+                    <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-accent" />
+                    <span>Achievement Unlocked!</span>
+                    </div>
+                ),
+                description: a.title,
+                });
+            });
+        }
+        
+        return {
+            unlockedIds: newUnlockedIds,
+            gamesPlayed: updatedGamesPlayed,
+            bestScore: prev.bestScore === null ? finalScore : Math.min(prev.bestScore, finalScore),
+        };
+    });
+  }, [toast]);
 
   return {
     achievements,

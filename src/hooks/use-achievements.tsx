@@ -54,11 +54,12 @@ export const useAchievements = () => {
   }, [achievements, isLoaded]);
 
   const checkAndUnlockAchievements = useCallback((finalScore: number) => {
-    const newAchievements: Achievement[] = [];
     const updatedGamesPlayed = achievements.gamesPlayed + 1;
+    const newUnlockedIds = new Set(achievements.unlockedIds);
+    const achievementsToToast: Achievement[] = [];
 
     achievementsList.forEach(achievement => {
-      if (achievements.unlockedIds.has(achievement.id)) return;
+      if (newUnlockedIds.has(achievement.id)) return;
 
       let unlocked = false;
       if (achievement.type === 'score' && finalScore <= achievement.threshold) {
@@ -69,34 +70,30 @@ export const useAchievements = () => {
       }
 
       if (unlocked) {
-        newAchievements.push(achievement);
+        newUnlockedIds.add(achievement.id);
+        achievementsToToast.push(achievement);
       }
     });
 
-    if (newAchievements.length > 0) {
-      setAchievements(prev => {
-        const newUnlockedIds = new Set(prev.unlockedIds);
-        newAchievements.forEach(a => newUnlockedIds.add(a.id));
-        newAchievements.forEach(a => {
-            toast({
-              title: (
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-accent" />
-                  <span>Achievement Unlocked!</span>
-                </div>
-              ),
-              description: a.title,
-            });
-        });
-        return { ...prev, unlockedIds: newUnlockedIds };
-      });
-    }
-
     setAchievements(prev => ({
-        ...prev,
+        unlockedIds: newUnlockedIds,
         gamesPlayed: updatedGamesPlayed,
         bestScore: prev.bestScore === null ? finalScore : Math.min(prev.bestScore, finalScore),
     }));
+
+    if (achievementsToToast.length > 0) {
+      achievementsToToast.forEach(a => {
+        toast({
+          title: (
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-accent" />
+              <span>Achievement Unlocked!</span>
+            </div>
+          ),
+          description: a.title,
+        });
+      });
+    }
 
   }, [achievements.gamesPlayed, achievements.unlockedIds, toast]);
 

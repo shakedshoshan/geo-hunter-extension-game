@@ -64,7 +64,8 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
       const score = currentCountry.ranks[action.payload.category.id];
       const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
       const availableCategoryIds = gameCategories.map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
-      const bestCategory = gameCategories
+      
+      const bestCategory = [...gameCategories]
         .filter(c => availableCategoryIds.includes(c.id))
         .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
 
@@ -131,11 +132,30 @@ interface GameStateProps {
 export const useGameState = ({ settings, achievements, achievementsActions }: GameStateProps) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
+  const nextRound = useCallback(() => {
+    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+    if (state.currentRoundIndex >= gameCategories.length - 1) {
+        dispatch({ type: 'END_GAME' });
+    } else {
+        dispatch({ type: 'NEXT_ROUND' });
+    }
+  }, [state.currentRoundIndex, state.gameCategories]);
+
   useEffect(() => {
     if (state.gameState === 'results' && state.score > 0) {
       achievementsActions.checkAndUnlockAchievements(state.score);
     }
   }, [state.gameState, state.score, achievementsActions]);
+  
+  useEffect(() => {
+    const roundResult = state.history[state.currentRoundIndex];
+    if(roundResult && !roundResult.hintLoading) {
+      const timer = setTimeout(() => {
+        nextRound();
+      }, 2000); // 2 second delay
+      return () => clearTimeout(timer);
+    }
+  }, [state.history, state.currentRoundIndex, nextRound]);
 
   const startGame = useCallback((customCategories?: Category[]) => {
     const categoriesToUse = customCategories || shuffleArray(allCategories).slice(0, 5);
@@ -150,9 +170,10 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
     
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     const availableCategoryIds = gameCategories.map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
-    const bestCategory = gameCategories
-      .filter(c => availableCategoryIds.includes(c.id))
-      .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+    
+    const bestCategory = [...gameCategories]
+        .filter(c => availableCategoryIds.includes(c.id))
+        .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
       
     if (settings.hintsOn && bestCategory && bestCategory.id !== category.id && currentCountry.ranks[bestCategory.id] < rank) {
         try {
@@ -173,31 +194,17 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
     }
   }, [state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn]);
   
-  const nextRound = useCallback(() => {
-    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
-    if (state.currentRoundIndex >= gameCategories.length - 1) {
-        dispatch({ type: 'END_GAME' });
-    } else {
-        dispatch({ type: 'NEXT_ROUND' });
-    }
-  }, [state.currentRoundIndex, state.gameCategories]);
-  
   const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
   const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);
   const goToAchievements = useCallback(() => dispatch({ type: 'GO_TO_ACHIEVEMENTS' }), []);
 
   const currentCountry = useMemo(() => state.gameCountries[state.currentRoundIndex], [state.gameCountries, state.currentRoundIndex]);
   const roundResult = useMemo(() => state.history[state.currentRoundIndex], [state.history, state.currentRoundIndex]);
-  const availableCategories = useMemo(() => {
-    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
-    return gameCategories.filter(cat => !state.history.some(h => h.selectedCategory.id === cat.id))
-  }, [state.gameCategories, state.history]);
   
   return {
     ...state,
     currentCountry,
     roundResult,
-    availableCategories,
     startGame,
     selectCategory,
     nextRound,

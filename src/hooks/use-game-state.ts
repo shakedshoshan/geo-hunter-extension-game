@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, Reducer, useCallback, useMemo } from 'react';
+import { useReducer, Reducer, useCallback, useMemo, useEffect } from 'react';
 import { countries, categories as allCategories, Country, Category } from '@/lib/data';
 import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
@@ -108,7 +108,8 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
         // Fallthrough to END_GAME if it's the last round
         return { ...state, gameState: 'results', score: state.score + state.history[state.history.length-1].score };
     case 'END_GAME':
-      return { ...state, gameState: 'results' };
+      const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
+      return { ...state, gameState: 'results', score: finalScore };
     case 'GO_TO_MENU':
       return { ...initialState, gameState: 'menu' };
     case 'GO_TO_CUSTOM':
@@ -128,6 +129,12 @@ interface GameStateProps {
 
 export const useGameState = ({ settings, achievements, achievementsActions }: GameStateProps) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+
+  useEffect(() => {
+    if (state.gameState === 'results') {
+      achievementsActions.checkAndUnlockAchievements(state.score);
+    }
+  }, [state.gameState, state.score, achievementsActions]);
 
   const startGame = useCallback((customCategories?: Category[]) => {
     const categoriesToUse = customCategories || shuffleArray(allCategories).slice(0, 5);
@@ -167,13 +174,11 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
   
   const nextRound = useCallback(() => {
     if (state.currentRoundIndex >= state.gameCategories.length - 1) {
-        const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
-        achievementsActions.checkAndUnlockAchievements(finalScore);
         dispatch({ type: 'END_GAME' });
     } else {
         dispatch({ type: 'NEXT_ROUND' });
     }
-  }, [state.currentRoundIndex, state.gameCategories.length, state.score, state.history, achievementsActions]);
+  }, [state.currentRoundIndex, state.gameCategories.length]);
   
   const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
   const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);

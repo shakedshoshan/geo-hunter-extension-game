@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, Reducer, useCallback, useMemo, useEffect } from 'react';
+import { useReducer, Reducer, useCallback, useMemo, useEffect, useState } from 'react';
 import { countries, categories as allCategories, Country, Category } from '@/lib/data';
 import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
@@ -32,7 +32,7 @@ type Action =
   | { type: 'SET_HINT'; payload: { hint: string } }
   | { type: 'SET_HINT_LOADING'; payload: { loading: boolean } }
   | { type: 'NEXT_ROUND' }
-  | { type: 'END_GAME'; payload: { finalScore: number } }
+  | { type: 'END_GAME' }
   | { type: 'GO_TO_MENU' }
   | { type: 'GO_TO_CUSTOM' }
   | { type: 'GO_TO_ACHIEVEMENTS' };
@@ -107,7 +107,8 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
         };
     }
     case 'END_GAME':
-      return { ...state, gameState: 'results', score: action.payload.finalScore };
+      const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
+      return { ...state, gameState: 'results', score: finalScore };
     case 'GO_TO_MENU':
       return { ...initialState, gameState: 'menu' };
     case 'GO_TO_CUSTOM':
@@ -125,14 +126,48 @@ interface GameStateProps {
     checkAndUnlockAchievements: ReturnType<typeof useAchievements>['checkAndUnlockAchievements'];
 }
 
+const LAST_CATEGORIES_KEY = 'geoRankerLastCategories';
+
 export const useGameState = ({ settings, achievements, checkAndUnlockAchievements }: GameStateProps) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [lastCategories, setLastCategories] = useState<Category[] | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LAST_CATEGORIES_KEY);
+      if (stored) {
+        const categoryIds = JSON.parse(stored) as string[];
+        const loadedCategories = allCategories.filter(c => categoryIds.includes(c.id));
+        if (loadedCategories.length > 0) {
+          setLastCategories(loadedCategories);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load last played categories from localStorage', error);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  const saveLastCategories = (categories: Category[]) => {
+    try {
+      const categoryIds = categories.map(c => c.id);
+      localStorage.setItem(LAST_CATEGORIES_KEY, JSON.stringify(categoryIds));
+      setLastCategories(categories);
+    } catch (error) {
+      console.error('Failed to save last played categories to localStorage', error);
+    }
+  };
+  
   const endGame = useCallback(() => {
-    const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
-    dispatch({ type: 'END_GAME', payload: { finalScore } });
-    checkAndUnlockAchievements(finalScore);
-  }, [state.score, state.history, checkAndUnlockAchievements]);
+    dispatch({ type: 'END_GAME' });
+  }, []);
+  
+  useEffect(() => {
+    if (state.gameState === 'results' && isLoaded) {
+      checkAndUnlockAchievements(state.score);
+    }
+  }, [state.gameState, state.score, checkAndUnlockAchievements, isLoaded]);
 
   const nextRound = useCallback(() => {
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
@@ -145,7 +180,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   
   useEffect(() => {
     const roundResult = state.history[state.currentRoundIndex];
-    if (state.gameState === 'playing' && roundResult && !roundResult.hintLoading) {
+    if (state.gameState === 'playing' && roundResult && roundResult.hintLoading === false) {
       const timer = setTimeout(() => {
         nextRound();
       }, 2000); // 2 second delay
@@ -154,9 +189,19 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   }, [state.gameState, state.history, state.currentRoundIndex, nextRound]);
 
   const startGame = useCallback((customCategories?: Category[]) => {
-    const categoriesToUse = customCategories || shuffleArray(allCategories).slice(0, 5);
+    let categoriesToUse: Category[];
+
+    if (customCategories) {
+      categoriesToUse = customCategories;
+    } else if (lastCategories) {
+      categoriesToUse = lastCategories;
+    } else {
+      categoriesToUse = shuffleArray(allCategories).slice(0, 8);
+    }
+    
+    saveLastCategories(categoriesToUse);
     dispatch({ type: 'START_GAME', payload: { categories: categoriesToUse, rounds: categoriesToUse.length } });
-  }, []);
+  }, [lastCategories]);
 
   const selectCategory = useCallback(async (category: Category) => {
     if(state.gameState !== 'playing') return;

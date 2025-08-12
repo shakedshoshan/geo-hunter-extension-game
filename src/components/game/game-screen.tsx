@@ -61,7 +61,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-2xl font-headline">Round {currentRoundIndex + 1}/{gameCategories.length}</CardTitle>
+          <CardTitle className="text-2xl font-headline">Round {currentRoundIndex + 1}/{Array.isArray(gameCategories) ? gameCategories.length : 0}</CardTitle>
           <Badge variant="secondary" className="text-lg">Score: {score}</Badge>
         </div>
       </CardHeader>
@@ -84,7 +84,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           <p className="text-center text-muted-foreground">Which category does this country rank highest in?</p>
 
           <div className="grid grid-cols-2 gap-3 w-full pt-4">
-            {gameCategories.map(category => {
+            {Array.isArray(gameCategories) && gameCategories.map(category => {
               const isUsed = !availableCategories.some(ac => ac.id === category.id);
               const isSelected = hasSelected && roundResult.selectedCategory.id === category.id;
 

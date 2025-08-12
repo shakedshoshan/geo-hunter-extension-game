@@ -126,10 +126,10 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
 interface GameStateProps {
     settings: Settings;
     achievements: ReturnType<typeof useAchievements>['achievements'];
-    achievementsActions: Pick<ReturnType<typeof useAchievements>, 'checkAndUnlockAchievements'>;
+    checkAndUnlockAchievements: ReturnType<typeof useAchievements>['checkAndUnlockAchievements'];
 }
 
-export const useGameState = ({ settings, achievements, achievementsActions }: GameStateProps) => {
+export const useGameState = ({ settings, achievements, checkAndUnlockAchievements }: GameStateProps) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
   const nextRound = useCallback(() => {
@@ -143,9 +143,9 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
 
   useEffect(() => {
     if (state.gameState === 'results' && state.score > 0) {
-      achievementsActions.checkAndUnlockAchievements(state.score);
+      checkAndUnlockAchievements(state.score);
     }
-  }, [state.gameState, state.score, achievementsActions]);
+  }, [state.gameState, state.score, checkAndUnlockAchievements]);
   
   useEffect(() => {
     const roundResult = state.history[state.currentRoundIndex];

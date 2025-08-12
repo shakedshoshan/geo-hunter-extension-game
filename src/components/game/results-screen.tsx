@@ -6,12 +6,13 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Repeat, Home } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
-import { useAchievements } from '@/hooks/use-achievements.tsx';
+import type { AchievementsState } from '@/hooks/use-achievements.tsx';
 
-type ResultsScreenProps = Pick<ReturnType<typeof useGameState>, 'score' | 'history' | 'startGame' | 'goToMenu'>;
+type ResultsScreenProps = Pick<ReturnType<typeof useGameState>, 'score' | 'history' | 'startGame' | 'goToMenu'> & {
+    achievements: AchievementsState;
+};
 
-export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, startGame, goToMenu }) => {
-  const { achievements } = useAchievements();
+export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, startGame, goToMenu, achievements }) => {
   
   return (
     <Card className="w-full max-w-md text-center shadow-lg animate-in fade-in zoom-in-95">

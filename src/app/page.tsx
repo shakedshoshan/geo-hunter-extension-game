@@ -13,15 +13,15 @@ import { categories as allCategories } from '@/lib/data';
 
 export default function GeoRankerPage() {
   const { settings, ...settingsActions } = useSettings();
-  const { achievements, ...achievementsActions } = useAchievements();
-  const gameState = useGameState({ settings, achievements, achievementsActions });
+  const { achievements, checkAndUnlockAchievements } = useAchievements();
+  const gameState = useGameState({ settings, achievements, checkAndUnlockAchievements });
 
   const renderContent = () => {
     switch (gameState.gameState) {
       case 'playing':
         return <GameScreen {...gameState} {...settings} />;
       case 'results':
-        return <ResultsScreen {...gameState} />;
+        return <ResultsScreen {...gameState} achievements={achievements} />;
       case 'achievements':
         return <AchievementsScreen achievements={achievements} goToMenu={gameState.goToMenu} />;
       case 'custom':

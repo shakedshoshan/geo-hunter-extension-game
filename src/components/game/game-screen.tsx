@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
-import { cn } from '@/lib/utils';
+import { FlagFlipper } from './flag-flipper';
 
 type GameScreenProps = ReturnType<typeof useGameState> & { expertMode: boolean };
 
@@ -65,16 +66,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-primary/20">
             {currentCountry ? (
-              <Image
-                src={currentCountry.flag}
-                alt={`Flag of ${currentCountry.name}`}
-                data-ai-hint={`flag ${currentCountry.name}`}
-                className={cn(hasSelected && "animate-spin-once")}
-                fill
-                style={{ objectFit: 'cover' }}
-                priority
-                unoptimized
-              />
+              <FlagFlipper country={currentCountry} startAnimation={hasSelected} />
             ) : (
               <Skeleton className="w-full h-full" />
             )}

@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -88,15 +89,17 @@ export default {
             height: '0',
           },
         },
-        'spin-once': {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' },
+        'flag-flip': {
+            '0%': { transform: 'scaleY(1)', opacity: '1' },
+            '50%': { transform: 'scaleY(0)', opacity: '0' },
+            '51%': { opacity: '0' },
+            '100%': { transform: 'scaleY(1)', opacity: '1' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'spin-once': 'spin-once 1.5s ease-in-out',
+        'flag-flip': 'flag-flip 0.1s ease-in-out',
       },
     },
   },

@@ -23,7 +23,7 @@ export default function GeoRankerPage() {
       case 'results':
         return <ResultsScreen {...gameState} />;
       case 'achievements':
-        return <AchievementsScreen {...achievements} {...gameState} />;
+        return <AchievementsScreen achievements={achievements} goToMenu={gameState.goToMenu} />;
       case 'custom':
         return <CustomCategoriesScreen allCategories={allCategories} startGame={gameState.startGame} goToMenu={gameState.goToMenu} />;
       case 'menu':

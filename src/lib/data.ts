@@ -11,6 +11,7 @@ export interface Country {
   name: string;
   flag: string; // URL to flag image
   ranks: Record<string, number>;
+  code: string;
 }
 
 export const categories: Category[] = [
@@ -26,62 +27,74 @@ export const categories: Category[] = [
 export const countries: Country[] = [
   {
     name: "USA",
-    flag: "https://placehold.co/300x200/d32f2f/ffffff?text=USA",
+    code: "us",
+    flag: "https://flagcdn.com/w320/us.png",
     ranks: { population: 3, gdp: 1, area: 3, hdi: 21, coffee: 26, crime: 88, tourism: 2 },
   },
   {
     name: "China",
-    flag: "https://placehold.co/300x200/d32f2f/FFD700?text=CHN",
+    code: "cn",
+    flag: "https://flagcdn.com/w320/cn.png",
     ranks: { population: 2, gdp: 2, area: 4, hdi: 79, coffee: 13, crime: 19, tourism: 4 },
   },
   {
     name: "Brazil",
-    flag: "https://placehold.co/300x200/009B3A/FFDF00?text=BRA",
+    code: "br",
+    flag: "https://flagcdn.com/w320/br.png",
     ranks: { population: 7, gdp: 9, area: 5, hdi: 87, coffee: 1, crime: 128, tourism: 51 },
   },
   {
     name: "India",
-    flag: "https://placehold.co/300x200/FF9933/FFFFFF?text=IND",
+    code: "in",
+    flag: "https://flagcdn.com/w320/in.png",
     ranks: { population: 1, gdp: 5, area: 7, hdi: 132, coffee: 6, crime: 79, tourism: 16 },
   },
   {
     name: "Russia",
-    flag: "https://placehold.co/300x200/FFFFFF/0033A0?text=RUS",
+    code: "ru",
+    flag: "https://flagcdn.com/w320/ru.png",
     ranks: { population: 9, gdp: 11, area: 1, hdi: 52, coffee: 80, crime: 92, tourism: 29 },
   },
   {
     name: "Japan",
-    flag: "https://placehold.co/300x200/FFFFFF/BC002D?text=JPN",
+    code: "jp",
+    flag: "https://flagcdn.com/w320/jp.png",
     ranks: { population: 11, gdp: 3, area: 62, hdi: 19, coffee: 45, crime: 9, tourism: 12 },
   },
   {
     name: "Germany",
-    flag: "https://placehold.co/300x200/000000/DD0000?text=GER",
+    code: "de",
+    flag: "https://flagcdn.com/w320/de.png",
     ranks: { population: 19, gdp: 4, area: 63, hdi: 9, coffee: 70, crime: 59, tourism: 9 },
   },
   {
     name: "Switzerland",
-    flag: "https://placehold.co/300x200/D52B1E/FFFFFF?text=%2B",
+    code: "ch",
+    flag: "https://flagcdn.com/w320/ch.png",
     ranks: { population: 100, gdp: 20, area: 135, hdi: 1, coffee: 60, crime: 10, tourism: 38 },
   },
   {
     name: "Vietnam",
-    flag: "https://placehold.co/300x200/DA251D/FFFF00?text=VNM",
+    code: "vn",
+    flag: "https://flagcdn.com/w320/vn.png",
     ranks: { population: 15, gdp: 37, area: 66, hdi: 115, coffee: 2, crime: 43, tourism: 21 },
   },
   {
     name: "Canada",
-    flag: "https://placehold.co/300x200/FF0000/FFFFFF?text=CAN",
+    code: "ca",
+    flag: "https://flagcdn.com/w320/ca.png",
     ranks: { population: 38, gdp: 10, area: 2, hdi: 15, coffee: 100, crime: 60, tourism: 17 },
   },
   {
     name: "Italy",
-    flag: "https://placehold.co/300x200/009246/FFFFFF?text=ITA",
+    code: "it",
+    flag: "https://flagcdn.com/w320/it.png",
     ranks: { population: 25, gdp: 8, area: 72, hdi: 30, coffee: 50, crime: 75, tourism: 5 },
   },
   {
     name: "Australia",
-    flag: "https://placehold.co/300x200/00008B/FFFFFF?text=AUS",
+    code: "au",
+    flag: "https://flagcdn.com/w320/au.png",
     ranks: { population: 55, gdp: 13, area: 6, hdi: 5, coffee: 35, crime: 72, tourism: 40 },
   }
 ];

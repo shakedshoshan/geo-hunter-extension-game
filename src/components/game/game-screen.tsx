@@ -37,7 +37,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {isBestPick ? "Perfect Pick!" : "Good Try!"}
           </AlertTitle>
           <AlertDescription>
-            {currentCountry.name} is ranked #{score} in {selectedCategory.name}. Your score for this round is {score}.
+            Your score for this round is {score}.
           </AlertDescription>
         </Alert>
 
@@ -75,6 +75,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               fill
               style={{ objectFit: 'cover' }}
               priority
+              unoptimized
             />
           </div>
           {!expertMode && (
@@ -85,16 +86,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           <div className="grid grid-cols-2 gap-3 w-full pt-4">
             {gameCategories.map(category => {
               const isUsed = !availableCategories.some(ac => ac.id === category.id);
+              const isSelected = hasSelected && roundResult.selectedCategory.id === category.id;
+
               return (
                 <Button
                   key={category.id}
                   onClick={() => selectCategory(category)}
                   disabled={isUsed || hasSelected}
-                  variant={hasSelected && roundResult.selectedCategory.id === category.id ? "default" : "outline"}
-                  className="h-16 text-wrap"
+                  variant={isSelected ? "default" : "outline"}
+                  className="h-20 text-wrap flex flex-col justify-center items-center relative"
                 >
-                  <category.Icon className="mr-2 h-5 w-5 flex-shrink-0" />
-                  <span className="flex-grow text-center">{category.name}</span>
+                  <div className="flex items-center gap-2">
+                    <category.Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="flex-grow text-center">{category.name}</span>
+                  </div>
+                   {isSelected && (
+                    <div className="absolute -top-3 -right-3 flex items-center gap-1 bg-background border rounded-full px-2 py-1 shadow-lg">
+                        <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                           <Image src={currentCountry.flag} alt={currentCountry.name} fill style={{ objectFit: 'cover' }} unoptimized/>
+                        </div>
+                        <Badge variant="outline">#{roundResult.score}</Badge>
+                    </div>
+                  )}
                 </Button>
               );
             })}

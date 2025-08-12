@@ -1,0 +1,108 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { achievementsList, Achievement } from '@/lib/achievements';
+import { Trophy } from 'lucide-react';
+
+export interface AchievementsState {
+  unlockedIds: Set<string>;
+  bestScore: number | null;
+  gamesPlayed: number;
+}
+
+const defaultAchievements: AchievementsState = {
+  unlockedIds: new Set(),
+  bestScore: null,
+  gamesPlayed: 0,
+};
+
+export const useAchievements = () => {
+  const [achievements, setAchievements] = useState<AchievementsState>(defaultAchievements);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('geoRankerAchievements');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setAchievements({
+          ...defaultAchievements,
+          ...parsed,
+          unlockedIds: new Set(parsed.unlockedIds || []),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load achievements from localStorage', error);
+    }
+    setIsLoaded(true);
+  }, []);
+  
+  useEffect(() => {
+    if (isLoaded) {
+      try {
+        const toStore = {
+          ...achievements,
+          unlockedIds: Array.from(achievements.unlockedIds),
+        };
+        localStorage.setItem('geoRankerAchievements', JSON.stringify(toStore));
+      } catch (error) {
+        console.error('Failed to save achievements to localStorage', error);
+      }
+    }
+  }, [achievements, isLoaded]);
+
+  const checkAndUnlockAchievements = useCallback((finalScore: number) => {
+    const newAchievements: Achievement[] = [];
+    const updatedGamesPlayed = achievements.gamesPlayed + 1;
+
+    achievementsList.forEach(achievement => {
+      if (achievements.unlockedIds.has(achievement.id)) return;
+
+      let unlocked = false;
+      if (achievement.type === 'score' && finalScore <= achievement.threshold) {
+        unlocked = true;
+      }
+      if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
+        unlocked = true;
+      }
+
+      if (unlocked) {
+        newAchievements.push(achievement);
+      }
+    });
+
+    if (newAchievements.length > 0) {
+      setAchievements(prev => {
+        const newUnlockedIds = new Set(prev.unlockedIds);
+        newAchievements.forEach(a => newUnlockedIds.add(a.id));
+        newAchievements.forEach(a => {
+            toast({
+              title: (
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-accent" />
+                  <span>Achievement Unlocked!</span>
+                </div>
+              ),
+              description: a.title,
+            });
+        });
+        return { ...prev, unlockedIds: newUnlockedIds };
+      });
+    }
+
+    setAchievements(prev => ({
+        ...prev,
+        gamesPlayed: updatedGamesPlayed,
+        bestScore: prev.bestScore === null ? finalScore : Math.min(prev.bestScore, finalScore),
+    }));
+
+  }, [achievements.gamesPlayed, achievements.unlockedIds, toast]);
+
+  return {
+    achievements,
+    checkAndUnlockAchievements,
+    isLoaded,
+  };
+};

@@ -62,8 +62,9 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
     case 'SELECT_CATEGORY': {
       const currentCountry = state.gameCountries[state.currentRoundIndex];
       const score = currentCountry.ranks[action.payload.category.id];
-      const availableCategoryIds = (state.gameCategories || []).map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
-      const bestCategory = (state.gameCategories || [])
+      const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+      const availableCategoryIds = gameCategories.map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
+      const bestCategory = gameCategories
         .filter(c => availableCategoryIds.includes(c.id))
         .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
 
@@ -144,12 +145,12 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
   const selectCategory = useCallback(async (category: Category) => {
     dispatch({ type: 'SELECT_CATEGORY', payload: { category } });
     
-    // The state update is dispatched, now find the data for the hint
     const currentCountry = state.gameCountries[state.currentRoundIndex];
     const rank = currentCountry.ranks[category.id];
     
-    const availableCategoryIds = (state.gameCategories || []).map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
-    const bestCategory = (state.gameCategories || [])
+    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+    const availableCategoryIds = gameCategories.map(c => c.id).filter(id => !state.history.some(h => h.selectedCategory.id === id));
+    const bestCategory = gameCategories
       .filter(c => availableCategoryIds.includes(c.id))
       .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
       
@@ -173,7 +174,8 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
   }, [state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn]);
   
   const nextRound = useCallback(() => {
-    if (state.currentRoundIndex >= (state.gameCategories || []).length - 1) {
+    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+    if (state.currentRoundIndex >= gameCategories.length - 1) {
         dispatch({ type: 'END_GAME' });
     } else {
         dispatch({ type: 'NEXT_ROUND' });
@@ -186,7 +188,10 @@ export const useGameState = ({ settings, achievements, achievementsActions }: Ga
 
   const currentCountry = useMemo(() => state.gameCountries[state.currentRoundIndex], [state.gameCountries, state.currentRoundIndex]);
   const roundResult = useMemo(() => state.history[state.currentRoundIndex], [state.history, state.currentRoundIndex]);
-  const availableCategories = useMemo(() => (state.gameCategories || []).filter(cat => !state.history.some(h => h.selectedCategory.id === cat.id)), [state.gameCategories, state.history]);
+  const availableCategories = useMemo(() => {
+    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+    return gameCategories.filter(cat => !state.history.some(h => h.selectedCategory.id === cat.id))
+  }, [state.gameCategories, state.history]);
   
   return {
     ...state,

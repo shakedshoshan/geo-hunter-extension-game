@@ -32,7 +32,7 @@ type Action =
   | { type: 'SET_HINT'; payload: { hint: string } }
   | { type: 'SET_HINT_LOADING'; payload: { loading: boolean } }
   | { type: 'NEXT_ROUND' }
-  | { type: 'END_GAME' }
+  | { type: 'END_GAME'; payload: { finalScore: number } }
   | { type: 'GO_TO_MENU' }
   | { type: 'GO_TO_CUSTOM' }
   | { type: 'GO_TO_ACHIEVEMENTS' };
@@ -98,20 +98,16 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
         }
         return { ...state, history: newHistory };
     }
-    case 'NEXT_ROUND':
-        if (state.currentRoundIndex < state.gameCountries.length - 1) {
-            const lastRound = state.history[state.history.length-1];
-            return {
-                ...state,
-                currentRoundIndex: state.currentRoundIndex + 1,
-                score: state.score + lastRound.score,
-            };
-        }
-        // Fallthrough to END_GAME if it's the last round
-        return { ...state, gameState: 'results', score: state.score + state.history[state.history.length-1].score };
+    case 'NEXT_ROUND': {
+        const lastRound = state.history[state.history.length-1];
+        return {
+            ...state,
+            currentRoundIndex: state.currentRoundIndex + 1,
+            score: state.score + lastRound.score,
+        };
+    }
     case 'END_GAME':
-      const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
-      return { ...state, gameState: 'results', score: finalScore };
+      return { ...state, gameState: 'results', score: action.payload.finalScore };
     case 'GO_TO_MENU':
       return { ...initialState, gameState: 'menu' };
     case 'GO_TO_CUSTOM':
@@ -132,30 +128,30 @@ interface GameStateProps {
 export const useGameState = ({ settings, achievements, checkAndUnlockAchievements }: GameStateProps) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
+  const endGame = useCallback(() => {
+    const finalScore = state.score + (state.history[state.history.length-1]?.score || 0);
+    dispatch({ type: 'END_GAME', payload: { finalScore } });
+    checkAndUnlockAchievements(finalScore);
+  }, [state.score, state.history, checkAndUnlockAchievements]);
+
   const nextRound = useCallback(() => {
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     if (state.currentRoundIndex >= gameCategories.length - 1) {
-        dispatch({ type: 'END_GAME' });
+        endGame();
     } else {
         dispatch({ type: 'NEXT_ROUND' });
     }
-  }, [state.currentRoundIndex, state.gameCategories]);
-
-  useEffect(() => {
-    if (state.gameState === 'results' && state.score > 0) {
-      checkAndUnlockAchievements(state.score);
-    }
-  }, [state.gameState, state.score, checkAndUnlockAchievements]);
+  }, [state.currentRoundIndex, state.gameCategories, endGame]);
   
   useEffect(() => {
     const roundResult = state.history[state.currentRoundIndex];
-    if(roundResult && !roundResult.hintLoading) {
+    if (state.gameState === 'playing' && roundResult && !roundResult.hintLoading) {
       const timer = setTimeout(() => {
         nextRound();
       }, 2000); // 2 second delay
       return () => clearTimeout(timer);
     }
-  }, [state.history, state.currentRoundIndex, nextRound]);
+  }, [state.gameState, state.history, state.currentRoundIndex, nextRound]);
 
   const startGame = useCallback((customCategories?: Category[]) => {
     const categoriesToUse = customCategories || shuffleArray(allCategories).slice(0, 5);
@@ -163,6 +159,8 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   }, []);
 
   const selectCategory = useCallback(async (category: Category) => {
+    if(state.gameState !== 'playing') return;
+
     dispatch({ type: 'SELECT_CATEGORY', payload: { category } });
     
     const currentCountry = state.gameCountries[state.currentRoundIndex];
@@ -192,7 +190,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     } else {
         dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
-  }, [state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn]);
+  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn]);
   
   const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
   const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);

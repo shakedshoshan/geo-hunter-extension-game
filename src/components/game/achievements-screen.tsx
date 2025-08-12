@@ -5,11 +5,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Lock, ArrowLeft } from 'lucide-react';
 import { achievementsList } from '@/lib/achievements';
-import type { useAchievements } from '@/hooks/use-achievements.tsx';
+import type { AchievementsState } from '@/hooks/use-achievements.tsx';
 import type { useGameState } from '@/hooks/use-game-state';
 
 type AchievementsScreenProps = {
-  achievements: ReturnType<typeof useAchievements>['achievements'];
+  achievements: AchievementsState;
   goToMenu: ReturnType<typeof useGameState>['goToMenu'];
 };
 

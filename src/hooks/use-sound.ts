@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCallback, useState, useEffect } from 'react';
@@ -21,12 +22,12 @@ const useAudio = (url: string) => {
     const audioInstance = new Audio(url);
     audioInstance.preload = 'auto';
     setAudio(audioInstance);
-    
+
     return () => {
-        if(audioInstance) {
-            audioInstance.src = '';
-        }
-    }
+      // Cleanup: pause the audio and remove the source to prevent memory leaks
+      audioInstance.pause();
+      audioInstance.src = '';
+    };
   }, [url]);
 
   return audio;
@@ -46,7 +47,7 @@ export const useSound = () => {
     };
 
     const playSound = useCallback((sound: SoundType) => {
-        if (soundOn && audioInstances[sound]) {
+        if (soundOn) {
             const audio = audioInstances[sound];
             if (audio) {
                 audio.currentTime = 0;

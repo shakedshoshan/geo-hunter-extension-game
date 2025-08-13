@@ -22,7 +22,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ startGame, goToCustom, goToA
         <CardDescription>Test your geography knowledge!</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
-        <Button onClick={startGame} className="w-full" size="lg">
+        <Button onClick={() => startGame()} className="w-full" size="lg">
           <Play className="mr-2 h-5 w-5" />
           Start Game
         </Button>

@@ -6,6 +6,7 @@ import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
 import type { useAchievements } from './use-achievements';
 import { useToast } from './use-toast';
+import { useAudio } from '@/context/audio-context';
 
 type GameState = 'menu' | 'custom' | 'playing' | 'results' | 'achievements';
 
@@ -130,6 +131,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   const [lastCategories, setLastCategories] = useState<Category[] | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
+  const audio = useAudio();
 
   useEffect(() => {
     try {
@@ -162,8 +164,9 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   };
   
   const endGame = useCallback(() => {
+    audio.playSound('end');
     dispatch({ type: 'END_GAME' });
-  }, []);
+  }, [audio]);
   
   useEffect(() => {
     if (state.gameState === 'results' && isLoaded) {
@@ -188,6 +191,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
       bestOtherCategory: Category,
     ) => {
     if (shouldShowHint) {
+        audio.playSound('incorrect');
         toast({
             title: (
                 <div className="flex items-center gap-2">
@@ -213,11 +217,12 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     } else {
         dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
-  }, [toast]);
+  }, [toast, audio]);
 
   const selectCategory = useCallback(async (selectedCategory: Category) => {
     if (state.gameState !== 'playing' || state.history.length > state.currentRoundIndex) return;
   
+    audio.playSound('select');
     const currentCountry = state.gameCountries[state.currentRoundIndex];
     const selectedRank = currentCountry.ranks[selectedCategory.id];
   
@@ -236,6 +241,10 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   
     const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
   
+    if (isPerfectPick) {
+        audio.playSound('correct');
+    }
+    
     dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound, isPerfectPick } });
   
     setTimeout(() => {
@@ -246,7 +255,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
         }
         nextRound();
     }, 250);
-  }, [state.gameState, state.currentRoundIndex, state.history, state.gameCountries, state.gameCategories, settings.hintsOn, handleHintGeneration, nextRound]);
+  }, [state.gameState, state.currentRoundIndex, state.history, state.gameCountries, state.gameCategories, settings.hintsOn, handleHintGeneration, nextRound, audio]);
   
   const goToMenu = useCallback(() => {
       dispatch({ type: 'GO_TO_MENU' });
@@ -261,6 +270,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   }, []);
   
   const startGame = useCallback((customCategories?: Category[] | React.MouseEvent) => {
+    audio.playSound('start');
     let categoriesToUse: Category[];
 
     if (customCategories && Array.isArray(customCategories)) {
@@ -273,7 +283,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     
     saveLastCategories(categoriesToUse);
     dispatch({ type: 'START_GAME', payload: { categories: categoriesToUse, rounds: categoriesToUse.length } });
-  }, [lastCategories]);
+  }, [lastCategories, audio]);
 
   const currentCountry = useMemo(() => state.gameCountries[state.currentRoundIndex], [state.gameCountries, state.currentRoundIndex]);
   const roundResult = useMemo(() => state.history[state.currentRoundIndex], [state.history, state.currentRoundIndex]);

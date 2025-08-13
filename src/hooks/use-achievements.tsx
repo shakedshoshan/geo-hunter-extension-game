@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { achievementsList, Achievement } from '@/lib/achievements';
 import { Trophy, Lock } from 'lucide-react';
+import { useAudio } from '@/context/audio-context';
 
 export interface AchievementsState {
   unlockedIds: Set<string>;
@@ -23,6 +24,7 @@ export const useAchievements = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [achievementsToToast, setAchievementsToToast] = useState<Achievement[]>([]);
   const { toast } = useToast();
+  const audio = useAudio();
 
   useEffect(() => {
     try {
@@ -57,6 +59,7 @@ export const useAchievements = () => {
 
   useEffect(() => {
     if (achievementsToToast.length > 0) {
+      audio.playSound('achievement');
       achievementsToToast.forEach(a => {
         toast({
           title: (
@@ -75,7 +78,7 @@ export const useAchievements = () => {
       });
       setAchievementsToToast([]); // Clear the queue
     }
-  }, [achievementsToToast, toast]);
+  }, [achievementsToToast, toast, audio]);
 
   const checkAndUnlockAchievements = useCallback((finalScore: number, categoriesPlayed: number, isPerfectGame: boolean) => {
     setAchievements(prev => {

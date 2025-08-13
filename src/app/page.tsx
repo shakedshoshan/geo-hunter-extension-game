@@ -10,8 +10,9 @@ import { useGameState } from '@/hooks/use-game-state.tsx';
 import { useSettings } from '@/hooks/use-settings';
 import { useAchievements } from '@/hooks/use-achievements.tsx';
 import { categories as allCategories } from '@/lib/data';
+import { AudioProvider } from '@/context/audio-context';
 
-export default function GeoRankerPage() {
+function GeoRankerGame() {
   const { settings, ...settingsActions } = useSettings();
   const { achievements, checkAndUnlockAchievements } = useAchievements();
   const gameState = useGameState({ settings, achievements, checkAndUnlockAchievements });
@@ -47,4 +48,12 @@ export default function GeoRankerPage() {
       </div>
     </main>
   );
+}
+
+export default function GeoRankerPage() {
+  return (
+    <AudioProvider>
+      <GeoRankerGame />
+    </AudioProvider>
+  )
 }

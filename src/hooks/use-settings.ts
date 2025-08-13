@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 export interface Settings {
   expertMode: boolean; // Hides country names
   hintsOn: boolean; // Shows best pick hints
+  soundOn: boolean; // Toggles all sound
 }
 
 const defaultSettings: Settings = {
   expertMode: false,
   hintsOn: true,
+  soundOn: true,
 };
 
 export const useSettings = () => {
@@ -20,7 +22,7 @@ export const useSettings = () => {
     try {
       const storedSettings = localStorage.getItem('geoRankerSettings');
       if (storedSettings) {
-        setSettings(JSON.parse(storedSettings));
+        setSettings({ ...defaultSettings, ...JSON.parse(storedSettings) });
       }
     } catch (error) {
       console.error('Failed to load settings from localStorage', error);
@@ -46,10 +48,15 @@ export const useSettings = () => {
     setSettings(s => ({ ...s, hintsOn: !s.hintsOn }));
   }, []);
 
+  const toggleSound = useCallback(() => {
+    setSettings(s => ({ ...s, soundOn: !s.soundOn }));
+  }, []);
+
   return {
     settings,
     isLoaded,
     toggleExpertMode,
     toggleHints,
+    toggleSound,
   };
 };

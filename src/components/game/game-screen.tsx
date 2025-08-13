@@ -36,21 +36,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const renderResult = () => {
     if (!hasSelected) return null;
 
-    const { selectedCategory, score: roundScore, bestCategory, hint, hintLoading } = roundResult;
-    const isBestPick = selectedCategory.id === bestCategory?.id;
+    const { hint, hintLoading } = roundResult;
 
     return (
       <div className="mt-4 space-y-4 animate-in fade-in">
-        <Alert variant={isBestPick ? "default" : "destructive"} className={isBestPick ? "border-green-500" : ""}>
-          {isBestPick ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4" />}
-          <AlertTitle>
-            {isBestPick ? "Perfect Pick!" : "Good Try!"}
-          </AlertTitle>
-          <AlertDescription>
-            Your score for this round is {roundScore}. Moving to the next round...
-          </AlertDescription>
-        </Alert>
-
         {hintLoading && <Skeleton className="h-20 w-full" />}
         {!hintLoading && hint && (
           <Alert>

@@ -71,27 +71,30 @@ export const useAchievements = () => {
     }
   }, [achievementsToToast, toast]);
 
-  const checkAndUnlockAchievements = useCallback((finalScore: number) => {
+  const checkAndUnlockAchievements = useCallback((finalScore: number, categoriesPlayed: number) => {
     setAchievements(prev => {
         const updatedGamesPlayed = prev.gamesPlayed + 1;
         const newUnlockedIds = new Set(prev.unlockedIds);
         const newAchievements: Achievement[] = [];
 
         achievementsList.forEach(achievement => {
-        if (newUnlockedIds.has(achievement.id)) return;
+          if (newUnlockedIds.has(achievement.id)) return;
 
-        let unlocked = false;
-        if (achievement.type === 'score' && finalScore <= achievement.threshold) {
-            unlocked = true;
-        }
-        if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
-            unlocked = true;
-        }
+          let unlocked = false;
+          if (achievement.type === 'score' && finalScore <= achievement.threshold) {
+              unlocked = true;
+          }
+          if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
+              unlocked = true;
+          }
+          if (achievement.type === 'categories' && categoriesPlayed === achievement.threshold) {
+              unlocked = true;
+          }
 
-        if (unlocked) {
-            newUnlockedIds.add(achievement.id);
-            newAchievements.push(achievement);
-        }
+          if (unlocked) {
+              newUnlockedIds.add(achievement.id);
+              newAchievements.push(achievement);
+          }
         });
 
         if (newAchievements.length > 0) {

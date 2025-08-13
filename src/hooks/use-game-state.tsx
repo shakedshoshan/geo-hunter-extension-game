@@ -165,9 +165,9 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   
   useEffect(() => {
     if (state.gameState === 'results' && isLoaded) {
-      checkAndUnlockAchievements(state.score);
+      checkAndUnlockAchievements(state.score, state.gameCategories.length);
     }
-  }, [state.gameState, state.score, checkAndUnlockAchievements, isLoaded]);
+  }, [state.gameState, state.score, state.gameCategories.length, checkAndUnlockAchievements, isLoaded]);
 
   const nextRound = useCallback(() => {
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
@@ -213,34 +213,37 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   }, [toast]);
 
   const selectCategory = useCallback(async (selectedCategory: Category) => {
-    if (state.gameState !== 'playing' || state.history[state.currentRoundIndex]) return;
-
+    if (state.gameState !== 'playing' || state.history.length > state.currentRoundIndex) return;
+  
     const currentCountry = state.gameCountries[state.currentRoundIndex];
     const selectedRank = currentCountry.ranks[selectedCategory.id];
-    
+  
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
-    const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
-    const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
-
+    
+    // Find the best pick among the *other available* categories
+    const otherAvailableCategories = gameCategories.filter(c => c.id !== selectedCategory.id && !usedCategoryIds.has(c.id));
     let bestOtherCategory: Category | undefined;
     if (otherAvailableCategories.length > 0) {
       bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     }
-    
+  
+    const bestCategoryInRound = [...gameCategories]
+      .filter(c => !usedCategoryIds.has(c.id))
+      .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+  
     const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
-    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
-
+  
     dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
-    
+  
     if (shouldShowHint && bestOtherCategory) {
       handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);
     } else {
       dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
-
+  
     nextRound();
-  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn, handleHintGeneration, nextRound]);
+  }, [state.gameState, state.currentRoundIndex, state.history, state.gameCountries, state.gameCategories, settings.hintsOn, handleHintGeneration, nextRound]);
   
   const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
   const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);

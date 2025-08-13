@@ -6,7 +6,7 @@ import { GameScreen } from '@/components/game/game-screen';
 import { ResultsScreen } from '@/components/game/results-screen';
 import { AchievementsScreen } from '@/components/game/achievements-screen';
 import { CustomCategoriesScreen } from '@/components/game/custom-categories-screen';
-import { useGameState } from '@/hooks/use-game-state';
+import { useGameState } from '@/hooks/use-game-state.tsx';
 import { useSettings } from '@/hooks/use-settings';
 import { useAchievements } from '@/hooks/use-achievements.tsx';
 import { categories as allCategories } from '@/lib/data';

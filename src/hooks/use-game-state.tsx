@@ -186,8 +186,12 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     ) => {
     if (shouldShowHint) {
         toast({
-            title: `${bestOtherCategory.name} (#${currentCountry.ranks[bestOtherCategory.id]})`,
-            description: "was a better pick.",
+            title: (
+                <div className="flex items-center gap-2">
+                    <bestOtherCategory.Icon className="h-5 w-5" />
+                    <span>{bestOtherCategory.name} (#{currentCountry.ranks[bestOtherCategory.id]})</span>
+                </div>
+            ),
             duration: 2000,
         });
         try {
@@ -208,16 +212,40 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     }
   }, [toast]);
 
-  useEffect(() => {
-    const roundResult = state.history[state.currentRoundIndex];
-    if (state.gameState === 'playing' && roundResult) {
-      const timer = setTimeout(() => {
-        nextRound();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [state.gameState, state.history, state.currentRoundIndex, nextRound]);
+  const selectCategory = useCallback(async (selectedCategory: Category) => {
+    if (state.gameState !== 'playing' || state.history[state.currentRoundIndex]) return;
 
+    const currentCountry = state.gameCountries[state.currentRoundIndex];
+    const selectedRank = currentCountry.ranks[selectedCategory.id];
+    
+    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
+    const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
+    const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
+    const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
+
+    let bestOtherCategory: Category | undefined;
+    if (otherAvailableCategories.length > 0) {
+      bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+    }
+    
+    const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
+    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+
+    dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
+    
+    if (shouldShowHint && bestOtherCategory) {
+      handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);
+    } else {
+      dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
+    }
+
+    nextRound();
+  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn, handleHintGeneration, nextRound]);
+  
+  const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
+  const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);
+  const goToAchievements = useCallback(() => dispatch({ type: 'GO_TO_ACHIEVEMENTS' }), []);
+  
   const startGame = useCallback((customCategories?: Category[] | React.MouseEvent) => {
     let categoriesToUse: Category[];
 
@@ -232,42 +260,6 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     saveLastCategories(categoriesToUse);
     dispatch({ type: 'START_GAME', payload: { categories: categoriesToUse, rounds: categoriesToUse.length } });
   }, [lastCategories]);
-
-  const selectCategory = useCallback(async (selectedCategory: Category) => {
-    if (state.gameState !== 'playing' || state.history[state.currentRoundIndex]) return;
-
-    const currentCountry = state.gameCountries[state.currentRoundIndex];
-    const selectedRank = currentCountry.ranks[selectedCategory.id];
-    
-    const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
-    const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
-    const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
-    
-    const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
-    let bestOtherCategory: Category | undefined;
-    let bestOtherRank = Infinity;
-
-    if (otherAvailableCategories.length > 0) {
-        bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
-        bestOtherRank = bestOtherCategory ? currentCountry.ranks[bestOtherCategory.id] : Infinity;
-    }
-    
-    const shouldShowHint = settings.hintsOn && bestOtherCategory && bestOtherRank < selectedRank;
-    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
-
-    dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
-
-    if (shouldShowHint && bestOtherCategory) {
-        handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);
-    } else {
-        dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
-    }
-
-  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn, handleHintGeneration]);
-  
-  const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
-  const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);
-  const goToAchievements = useCallback(() => dispatch({ type: 'GO_TO_ACHIEVEMENTS' }), []);
 
   const currentCountry = useMemo(() => state.gameCountries[state.currentRoundIndex], [state.gameCountries, state.currentRoundIndex]);
   const roundResult = useMemo(() => state.history[state.currentRoundIndex], [state.history, state.currentRoundIndex]);

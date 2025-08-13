@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { achievementsList, Achievement } from '@/lib/achievements';
-import { Trophy, Lock } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { useAudio } from '@/context/audio-context';
 
 export interface AchievementsState {
@@ -70,7 +70,9 @@ export const useAchievements = () => {
           ),
           description: (
             <div className="flex items-center gap-3 mt-2">
-               <img src={a.image} alt={a.title} data-ai-hint={a.imageHint} className="h-10 w-10 rounded-md object-cover flex-shrink-0" />
+               <div className="relative h-10 w-10 rounded-md flex-shrink-0">
+                <Image src={a.image} alt={a.title} data-ai-hint={a.imageHint} fill className="rounded-md object-cover" unoptimized/>
+               </div>
                <span className="font-semibold">{a.title}</span>
             </div>
           ),

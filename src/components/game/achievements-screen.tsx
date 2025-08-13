@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Lock, ArrowLeft } from 'lucide-react';
+import { Lock, ArrowLeft } from 'lucide-react';
 import { achievementsList } from '@/lib/achievements';
 import type { AchievementsState } from '@/hooks/use-achievements';
 import type { useGameState } from '@/hooks/use-game-state.tsx';
@@ -16,13 +16,13 @@ type AchievementsScreenProps = {
 
 const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achievementsList[0], isUnlocked: boolean }) => (
     <div key={achievement.id} className={`flex items-center space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
-        {isUnlocked ? (
-          <img src={achievement.image} alt={achievement.title} data-ai-hint={achievement.imageHint} className="h-12 w-12 rounded-md object-cover flex-shrink-0" />
-        ) : (
-          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-muted flex-shrink-0">
+        <div className="flex items-center justify-center h-12 w-12 rounded-md bg-muted flex-shrink-0 relative">
+          {isUnlocked ? (
+            <Image src={achievement.image} alt={achievement.title} data-ai-hint={achievement.imageHint} fill className="rounded-md object-cover" unoptimized/>
+          ) : (
             <Lock className="h-6 w-6 text-muted-foreground" />
-          </div>
-        )}
+          )}
+        </div>
         <div className="flex-grow">
           <h3 className={`font-semibold ${isUnlocked ? 'text-accent-foreground' : ''}`}>{achievement.title}</h3>
           <p className="text-sm text-muted-foreground">{achievement.description}</p>

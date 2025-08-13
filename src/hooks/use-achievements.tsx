@@ -71,7 +71,7 @@ export const useAchievements = () => {
     }
   }, [achievementsToToast, toast]);
 
-  const checkAndUnlockAchievements = useCallback((finalScore: number, categoriesPlayed: number) => {
+  const checkAndUnlockAchievements = useCallback((finalScore: number, categoriesPlayed: number, isPerfectGame: boolean) => {
     setAchievements(prev => {
         const updatedGamesPlayed = prev.gamesPlayed + 1;
         const newUnlockedIds = new Set(prev.unlockedIds);
@@ -88,6 +88,9 @@ export const useAchievements = () => {
               unlocked = true;
           }
           if (achievement.type === 'categories' && categoriesPlayed === achievement.threshold) {
+              unlocked = true;
+          }
+          if (achievement.type === 'perfect' && isPerfectGame) {
               unlocked = true;
           }
 

@@ -4,7 +4,7 @@ import { useReducer, Reducer, useCallback, useMemo, useEffect, useState } from '
 import { countries, categories as allCategories, Country, Category } from '@/lib/data';
 import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
-import type { useAchievements } from './use-achievements.tsx';
+import type { useAchievements } from './use-achievements';
 import { useToast } from './use-toast';
 
 type GameState = 'menu' | 'custom' | 'playing' | 'results' | 'achievements';
@@ -16,6 +16,7 @@ interface RoundResult {
   bestCategory?: Category;
   hint?: string;
   hintLoading: boolean;
+  isPerfectPick: boolean;
 }
 
 interface State {
@@ -29,7 +30,7 @@ interface State {
 
 type Action =
   | { type: 'START_GAME'; payload: { categories: Category[], rounds: number } }
-  | { type: 'SELECT_CATEGORY'; payload: { category: Category, bestCategory?: Category } }
+  | { type: 'SELECT_CATEGORY'; payload: { category: Category, bestCategory?: Category, isPerfectPick: boolean } }
   | { type: 'SET_HINT'; payload: { hint: string } }
   | { type: 'SET_HINT_LOADING'; payload: { loading: boolean } }
   | { type: 'NEXT_ROUND' }
@@ -74,6 +75,7 @@ const gameReducer: Reducer<State, Action> = (state, action): State => {
             score,
             bestCategory: action.payload.bestCategory,
             hintLoading: true,
+            isPerfectPick: action.payload.isPerfectPick,
           },
         ],
       };
@@ -165,9 +167,10 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   
   useEffect(() => {
     if (state.gameState === 'results' && isLoaded) {
-      checkAndUnlockAchievements(state.score, state.gameCategories.length);
+      const isPerfectGame = state.history.every(h => h.isPerfectPick);
+      checkAndUnlockAchievements(state.score, state.gameCategories.length, isPerfectGame);
     }
-  }, [state.gameState, state.score, state.gameCategories.length, checkAndUnlockAchievements, isLoaded]);
+  }, [state.gameState, state.score, state.gameCategories.length, state.history, checkAndUnlockAchievements, isLoaded]);
 
   const nextRound = useCallback(() => {
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
@@ -221,20 +224,19 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
     
-    // Find the best pick among the *other available* categories
-    const otherAvailableCategories = gameCategories.filter(c => c.id !== selectedCategory.id && !usedCategoryIds.has(c.id));
+    const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
+    const bestCategoryInRound = [...availableCategories].sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+    const isPerfectPick = selectedCategory.id === bestCategoryInRound.id;
+    
+    const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
     let bestOtherCategory: Category | undefined;
     if (otherAvailableCategories.length > 0) {
       bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     }
   
-    const bestCategoryInRound = [...gameCategories]
-      .filter(c => !usedCategoryIds.has(c.id))
-      .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
-  
     const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
   
-    dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
+    dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound, isPerfectPick } });
   
     if (shouldShowHint && bestOtherCategory) {
       handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);

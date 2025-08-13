@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Play, AlertCircle } from 'lucide-react';
 import type { Category } from '@/lib/data';
-import { useSound } from '@/hooks/use-sound';
 
 interface CustomCategoriesScreenProps {
   allCategories: Category[];
@@ -20,10 +19,8 @@ const MAX_CATEGORIES = 8;
 export const CustomCategoriesScreen: React.FC<CustomCategoriesScreenProps> = ({ allCategories, startGame, goToMenu }) => {
   const [selected, setSelected] = useState<Map<string, Category>>(new Map());
   const [error, setError] = useState<string | null>(null);
-  const { playSelect, playStart } = useSound();
 
   const handleSelect = useCallback((category: Category) => {
-    playSelect();
     setSelected(prev => {
       const newSelected = new Map(prev);
       if (newSelected.has(category.id)) {
@@ -34,7 +31,7 @@ export const CustomCategoriesScreen: React.FC<CustomCategoriesScreenProps> = ({ 
       return newSelected;
     });
     setError(null);
-  }, [playSelect]);
+  }, []);
 
   const handleStartGame = () => {
     if (selected.size < MIN_CATEGORIES || selected.size > MAX_CATEGORIES) {

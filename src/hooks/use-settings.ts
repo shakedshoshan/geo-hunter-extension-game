@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export interface Settings {
-  soundOn: boolean;
   expertMode: boolean; // Hides country names
   hintsOn: boolean; // Shows best pick hints
 }
 
 const defaultSettings: Settings = {
-  soundOn: true,
   expertMode: false,
   hintsOn: true,
 };
@@ -40,10 +38,6 @@ export const useSettings = () => {
     }
   }, [settings, isLoaded]);
 
-  const toggleSound = useCallback(() => {
-    setSettings(s => ({ ...s, soundOn: !s.soundOn }));
-  }, []);
-
   const toggleExpertMode = useCallback(() => {
     setSettings(s => ({ ...s, expertMode: !s.expertMode }));
   }, []);
@@ -55,7 +49,6 @@ export const useSettings = () => {
   return {
     settings,
     isLoaded,
-    toggleSound,
     toggleExpertMode,
     toggleHints,
   };

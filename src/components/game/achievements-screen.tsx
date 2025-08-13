@@ -8,7 +8,6 @@ import { Trophy, Lock, ArrowLeft } from 'lucide-react';
 import { achievementsList } from '@/lib/achievements';
 import type { AchievementsState } from '@/hooks/use-achievements';
 import type { useGameState } from '@/hooks/use-game-state.tsx';
-import { useSound } from '@/hooks/use-sound';
 
 type AchievementsScreenProps = {
   achievements: AchievementsState;
@@ -36,7 +35,6 @@ const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achi
 
 export const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ achievements, goToMenu }) => {
   const { unlockedIds, bestScore, gamesPlayed } = achievements;
-  const { playSelect } = useSound();
 
   const generalAchievements = achievementsList.filter(a => a.type === 'games' || a.type === 'perfect');
   const categoryAchievements = (count: number) => achievementsList.filter(a => (a.type === 'categories' && a.threshold === count) || (a.type === 'score' && a.id.startsWith(`score_${count}`)));
@@ -66,12 +64,12 @@ export const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ achievem
 
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto mb-2">
-            <TabsTrigger value="general" onClick={playSelect}>General</TabsTrigger>
-            <TabsTrigger value="4" onClick={playSelect}>4 Cats</TabsTrigger>
-            <TabsTrigger value="5" onClick={playSelect}>5 Cats</TabsTrigger>
-            <TabsTrigger value="6" onClick={playSelect}>6 Cats</TabsTrigger>
-            <TabsTrigger value="7" onClick={playSelect}>7 Cats</TabsTrigger>
-            <TabsTrigger value="8" onClick={playSelect}>8 Cats</TabsTrigger>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="4">4 Cats</TabsTrigger>
+            <TabsTrigger value="5">5 Cats</TabsTrigger>
+            <TabsTrigger value="6">6 Cats</TabsTrigger>
+            <TabsTrigger value="7">7 Cats</TabsTrigger>
+            <TabsTrigger value="8">8 Cats</TabsTrigger>
           </TabsList>
           
           <ScrollArea className="h-72 w-full">

@@ -17,12 +17,11 @@ import type { Settings } from '@/hooks/use-settings';
 interface SettingsDialogProps {
   children: React.ReactNode;
   settings: Settings;
-  toggleSound: () => void;
   toggleExpertMode: () => void;
   toggleHints: () => void;
 }
 
-export const SettingsDialog: React.FC<SettingsDialogProps> = ({ children, settings, toggleSound, toggleExpertMode, toggleHints }) => {
+export const SettingsDialog: React.FC<SettingsDialogProps> = ({ children, settings, toggleExpertMode, toggleHints }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -36,17 +35,6 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ children, settin
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
-            <div className="flex items-center space-x-2">
-              {settings.soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-              <Label htmlFor="sound-mode">Sound</Label>
-            </div>
-            <Switch
-              id="sound-mode"
-              checked={settings.soundOn}
-              onCheckedChange={toggleSound}
-            />
-          </div>
           <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
             <div className="flex items-center space-x-2">
               {settings.expertMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

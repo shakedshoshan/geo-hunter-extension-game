@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { SettingsDialog } from './settings-dialog';
 import { ListChecks, Play, Trophy, Settings } from 'lucide-react';
 import type { useSettings } from '@/hooks/use-settings';
-import { useSound } from '@/hooks/use-sound';
 
 interface MainMenuProps {
   startGame: () => void;
@@ -15,7 +14,6 @@ interface MainMenuProps {
 }
 
 export const MainMenu: React.FC<MainMenuProps> = ({ startGame, goToCustom, goToAchievements, settings, settingsActions }) => {
-  const { playSelect } = useSound();
 
   return (
     <Card className="w-full max-w-md text-center shadow-lg">
@@ -37,7 +35,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ startGame, goToCustom, goToA
           Achievements
         </Button>
         <SettingsDialog settings={settings} {...settingsActions}>
-          <Button variant="outline" className="w-full" onClick={playSelect}>
+          <Button variant="outline" className="w-full">
             <Settings className="mr-2 h-5 w-5" />
             Settings
           </Button>

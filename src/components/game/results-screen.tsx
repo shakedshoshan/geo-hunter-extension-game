@@ -7,22 +7,18 @@ import { Badge } from '@/components/ui/badge';
 import { Repeat, Home } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
 import type { AchievementsState } from '@/hooks/use-achievements.tsx';
-import { useSound } from '@/hooks/use-sound';
 
 type ResultsScreenProps = Pick<ReturnType<typeof useGameState>, 'score' | 'history' | 'startGame' | 'goToMenu'> & {
     achievements: AchievementsState;
 };
 
 export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, startGame, goToMenu, achievements }) => {
-  const { playSelect } = useSound();
   
   const handlePlayAgain = () => {
-    playSelect();
     startGame();
   };
 
   const handleMainMenu = () => {
-    playSelect();
     goToMenu();
   }
 

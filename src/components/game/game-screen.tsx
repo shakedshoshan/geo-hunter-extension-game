@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,13 +21,22 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   roundResult,
   expertMode,
 }) => {
+  const [isNewRound, setIsNewRound] = useState(true);
   const hasSelected = !!roundResult;
+
+  useEffect(() => {
+    setIsNewRound(true);
+    // When a new round starts, briefly hide country info during animation
+    const timer = setTimeout(() => setIsNewRound(false), 1500);
+    return () => clearTimeout(timer);
+  }, [currentRoundIndex]);
 
   const renderResult = () => {
     if (!hasSelected) return null;
 
     const { selectedCategory, score: roundScore, bestCategory, hint, hintLoading } = roundResult;
     const isBestPick = selectedCategory.id === bestCategory?.id;
+    const displayScore = (s: number) => s > 100 ? "100+" : s;
 
     return (
       <div className="mt-4 space-y-4 animate-in fade-in">
@@ -38,7 +46,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {isBestPick ? "Perfect Pick!" : "Good Try!"}
           </AlertTitle>
           <AlertDescription>
-            Your score for this round is {roundScore}. Moving to the next round...
+            Your score for this round is {displayScore(roundScore)}. Moving to the next round...
           </AlertDescription>
         </Alert>
 
@@ -66,17 +74,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-primary/20">
             {currentCountry ? (
-              <FlagFlipper country={currentCountry} startAnimation={hasSelected} />
+              <FlagFlipper country={currentCountry} startAnimation={isNewRound} />
             ) : (
               <Skeleton className="w-full h-full" />
             )}
           </div>
-          {currentCountry && !expertMode && (
-            <h2 className="text-3xl font-bold">{currentCountry.name}</h2>
+          {currentCountry && !expertMode && !isNewRound && (
+            <h2 className="text-3xl font-bold animate-in fade-in">{currentCountry.name}</h2>
           )}
-          {currentCountry && (
-            <p className="text-center text-muted-foreground">Which category does this country rank highest in?</p>
+          {currentCountry && !isNewRound && (
+            <p className="text-center text-muted-foreground animate-in fade-in">Which category does this country rank highest in?</p>
           )}
+           {(isNewRound || !currentCountry) && (
+            <>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-5 w-64" />
+            </>
+           )}
 
           <div className="grid grid-cols-2 gap-3 w-full pt-4">
             {(Array.isArray(gameCategories) ? gameCategories : []).map(category => {
@@ -87,7 +101,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 <Button
                   key={category.id}
                   onClick={() => selectCategory(category)}
-                  disabled={isUsed || hasSelected}
+                  disabled={isUsed || hasSelected || isNewRound}
                   variant={isUsed ? "default" : "outline"}
                   className="h-20 text-wrap flex flex-col justify-center items-center relative"
                 >
@@ -100,7 +114,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                         <div className="relative w-6 h-6 rounded-full overflow-hidden">
                            <Image src={roundForCategory.country.flag} alt={roundForCategory.country.name} fill style={{ objectFit: 'cover' }} unoptimized/>
                         </div>
-                        <Badge variant="outline">#{roundForCategory.score}</Badge>
+                        <Badge variant="outline">#{roundForCategory.score > 100 ? "100+" : roundForCategory.score}</Badge>
                     </div>
                   )}
                 </Button>

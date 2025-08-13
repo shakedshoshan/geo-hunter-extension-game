@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSettings } from './use-settings';
 
-// Audio files - Using free assets from Pixabay
 const sounds = {
   select: 'https://cdn.pixabay.com/audio/2022/03/15/audio_73135804ad.mp3',
   start: 'https://cdn.pixabay.com/audio/2022/11/17/audio_88f233a808.mp3',
@@ -14,47 +13,36 @@ const sounds = {
 };
 
 type SoundType = keyof typeof sounds;
+type AudioPlayers = { [key in SoundType]?: HTMLAudioElement };
 
-const useAudio = (url: string) => {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    const audioInstance = new Audio(url);
-    audioInstance.preload = 'auto';
-    setAudio(audioInstance);
-
-    return () => {
-      // Cleanup: pause the audio and remove the source to prevent memory leaks
-      audioInstance.pause();
-      audioInstance.src = '';
-    };
-  }, [url]);
-
-  return audio;
+// We create a single audio context outside the hook to avoid re-creation.
+const audioContext: { players: AudioPlayers } = {
+  players: {},
 };
 
+// Pre-create audio elements if in a browser environment.
+if (typeof window !== 'undefined') {
+  for (const key in sounds) {
+    const soundKey = key as SoundType;
+    const player = new Audio(sounds[soundKey]);
+    player.preload = 'auto';
+    audioContext.players[soundKey] = player;
+  }
+}
 
 export const useSound = () => {
     const { settings } = useSettings();
     const { soundOn } = settings;
 
-    const audioInstances = {
-        select: useAudio(sounds.select),
-        start: useAudio(sounds.start),
-        correct: useAudio(sounds.correct),
-        wrong: useAudio(sounds.wrong),
-        achievement: useAudio(sounds.achievement),
-    };
-
     const playSound = useCallback((sound: SoundType) => {
-        if (soundOn) {
-            const audio = audioInstances[sound];
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(error => console.error(`Error playing sound: ${sound}`, error));
+        if (soundOn && typeof window !== 'undefined') {
+            const player = audioContext.players[sound];
+            if (player) {
+                player.currentTime = 0;
+                player.play().catch(error => console.error(`Error playing sound: ${sound}`, error));
             }
         }
-    }, [soundOn, audioInstances]);
+    }, [soundOn]);
 
     const playSelect = useCallback(() => playSound('select'), [playSound]);
     const playStart = useCallback(() => playSound('start'), [playSound]);

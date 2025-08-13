@@ -82,7 +82,10 @@ export const useAchievements = () => {
 
           let unlocked = false;
           if (achievement.type === 'score' && finalScore <= achievement.threshold) {
-              unlocked = true;
+              const categoriesInTitle = parseInt(achievement.id.split('_')[1], 10);
+              if (categoriesInTitle === categoriesPlayed) {
+                unlocked = true;
+              }
           }
           if (achievement.type === 'games' && updatedGamesPlayed >= achievement.threshold) {
               unlocked = true;

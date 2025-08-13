@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Lock, ArrowLeft } from 'lucide-react';
 import { achievementsList } from '@/lib/achievements';
-import type { AchievementsState } from '@/hooks/use-achievements.tsx';
+import type { AchievementsState } from '@/hooks/use-achievements';
 import type { useGameState } from '@/hooks/use-game-state.tsx';
 
 type AchievementsScreenProps = {
@@ -31,8 +31,8 @@ const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achi
 export const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ achievements, goToMenu }) => {
   const { unlockedIds, bestScore, gamesPlayed } = achievements;
 
-  const generalAchievements = achievementsList.filter(a => a.type === 'score' || a.type === 'games' || a.type === 'perfect');
-  const categoryAchievements = (count: number) => achievementsList.filter(a => a.type === 'categories' && a.threshold === count);
+  const generalAchievements = achievementsList.filter(a => a.type === 'games' || a.type === 'perfect');
+  const categoryAchievements = (count: number) => achievementsList.filter(a => (a.type === 'categories' && a.threshold === count) || (a.type === 'score' && a.id.startsWith(`score_${count}`)));
   
   return (
     <Card className="w-full max-w-md shadow-lg animate-in fade-in">

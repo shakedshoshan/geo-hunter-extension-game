@@ -6,6 +6,7 @@ import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
 import type { useAchievements } from './use-achievements';
 import { useToast } from './use-toast';
+import { useSound } from './use-sound';
 
 type GameState = 'menu' | 'custom' | 'playing' | 'results' | 'achievements';
 
@@ -130,6 +131,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   const [lastCategories, setLastCategories] = useState<Category[] | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
+  const { playCorrect, playWrong, playSelect, playStart } = useSound();
 
   useEffect(() => {
     try {
@@ -188,6 +190,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
       bestOtherCategory: Category,
     ) => {
     if (shouldShowHint) {
+        playWrong();
         toast({
             title: (
                 <div className="flex items-center gap-2">
@@ -211,13 +214,15 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
             dispatch({ type: 'SET_HINT', payload: { hint: "Could not generate a hint at this time." } });
         }
     } else {
+        playCorrect();
         dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
-  }, [toast]);
+  }, [toast, playCorrect, playWrong]);
 
   const selectCategory = useCallback(async (selectedCategory: Category) => {
     if (state.gameState !== 'playing' || state.history.length > state.currentRoundIndex) return;
   
+    playSelect();
     const currentCountry = state.gameCountries[state.currentRoundIndex];
     const selectedRank = currentCountry.ranks[selectedCategory.id];
   
@@ -238,20 +243,33 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   
     dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound, isPerfectPick } });
   
-    if (shouldShowHint && bestOtherCategory) {
-      handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);
-    } else {
-      dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
-    }
+    setTimeout(() => {
+        if (shouldShowHint && bestOtherCategory) {
+          handleHintGeneration(true, currentCountry, selectedCategory, bestOtherCategory);
+        } else {
+          handleHintGeneration(false, currentCountry, selectedCategory, bestOtherCategory);
+        }
+        nextRound();
+    }, 250); // Short delay to allow sound to play
+  }, [state.gameState, state.currentRoundIndex, state.history, state.gameCountries, state.gameCategories, settings.hintsOn, handleHintGeneration, nextRound, playSelect]);
   
-    nextRound();
-  }, [state.gameState, state.currentRoundIndex, state.history, state.gameCountries, state.gameCategories, settings.hintsOn, handleHintGeneration, nextRound]);
+  const goToMenu = useCallback(() => {
+      playSelect();
+      dispatch({ type: 'GO_TO_MENU' });
+  }, [playSelect]);
+
+  const goToCustom = useCallback(() => {
+    playSelect();
+    dispatch({ type: 'GO_TO_CUSTOM' });
+  }, [playSelect]);
   
-  const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
-  const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);
-  const goToAchievements = useCallback(() => dispatch({ type: 'GO_TO_ACHIEVEMENTS' }), []);
+  const goToAchievements = useCallback(() => {
+      playSelect();
+      dispatch({ type: 'GO_TO_ACHIEVEMENTS' });
+  }, [playSelect]);
   
   const startGame = useCallback((customCategories?: Category[] | React.MouseEvent) => {
+    playStart();
     let categoriesToUse: Category[];
 
     if (customCategories && Array.isArray(customCategories)) {
@@ -264,7 +282,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     
     saveLastCategories(categoriesToUse);
     dispatch({ type: 'START_GAME', payload: { categories: categoriesToUse, rounds: categoriesToUse.length } });
-  }, [lastCategories]);
+  }, [lastCategories, playStart]);
 
   const currentCountry = useMemo(() => state.gameCountries[state.currentRoundIndex], [state.gameCountries, state.currentRoundIndex]);
   const roundResult = useMemo(() => state.history[state.currentRoundIndex], [state.history, state.currentRoundIndex]);

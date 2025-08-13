@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +7,25 @@ import { Badge } from '@/components/ui/badge';
 import { Repeat, Home } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
 import type { AchievementsState } from '@/hooks/use-achievements.tsx';
+import { useSound } from '@/hooks/use-sound';
 
 type ResultsScreenProps = Pick<ReturnType<typeof useGameState>, 'score' | 'history' | 'startGame' | 'goToMenu'> & {
     achievements: AchievementsState;
 };
 
 export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, startGame, goToMenu, achievements }) => {
+  const { playSelect } = useSound();
   
+  const handlePlayAgain = () => {
+    playSelect();
+    startGame();
+  };
+
+  const handleMainMenu = () => {
+    playSelect();
+    goToMenu();
+  }
+
   return (
     <Card className="w-full max-w-md text-center shadow-lg animate-in fade-in zoom-in-95">
       <CardHeader>
@@ -48,10 +59,10 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, history, st
         </ScrollArea>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={() => startGame()} className="w-full">
+        <Button onClick={handlePlayAgain} className="w-full">
           <Repeat className="mr-2 h-4 w-4" /> Play Again
         </Button>
-        <Button onClick={goToMenu} variant="outline" className="w-full">
+        <Button onClick={handleMainMenu} variant="outline" className="w-full">
             <Home className="mr-2 h-4 w-4" /> Main Menu
         </Button>
       </CardFooter>

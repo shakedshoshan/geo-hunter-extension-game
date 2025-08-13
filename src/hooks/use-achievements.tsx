@@ -69,9 +69,8 @@ export const useAchievements = () => {
           ),
           description: (
             <div className="flex items-center gap-3 mt-2">
-               <div className="relative h-10 w-10 rounded-md flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.image} alt={a.title} data-ai-hint={a.imageHint} className="h-10 w-10 rounded-md object-cover" />
+               <div className="flex items-center justify-center h-10 w-10 rounded-md bg-muted flex-shrink-0">
+                  <Trophy className="h-6 w-6 text-accent" />
                </div>
                <span className="font-semibold">{a.title}</span>
             </div>

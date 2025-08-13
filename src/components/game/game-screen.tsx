@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 import type { useGameState } from '@/hooks/use-game-state';
 import { FlagFlipper } from './flag-flipper';
+import { useToast } from '@/hooks/use-toast';
 
 type GameScreenProps = ReturnType<typeof useGameState> & { expertMode: boolean };
 
@@ -23,6 +24,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 }) => {
   const [isNewRound, setIsNewRound] = useState(true);
   const hasSelected = !!roundResult;
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsNewRound(true);

@@ -5,6 +5,7 @@ import { countries, categories as allCategories, Country, Category } from '@/lib
 import { generateHint } from '@/ai/flows/generate-hint';
 import type { Settings } from './use-settings';
 import type { useAchievements } from './use-achievements.tsx';
+import { useToast } from './use-toast';
 
 type GameState = 'menu' | 'custom' | 'playing' | 'results' | 'achievements';
 
@@ -132,6 +133,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [lastCategories, setLastCategories] = useState<Category[] | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     try {
@@ -150,6 +152,10 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   }, []);
 
   const saveLastCategories = (categories: Category[]) => {
+    if (!Array.isArray(categories)) {
+      console.error("saveLastCategories was called with a non-array value", categories);
+      return;
+    }
     try {
       const categoryIds = categories.map(c => c.id);
       localStorage.setItem(LAST_CATEGORIES_KEY, JSON.stringify(categoryIds));
@@ -191,7 +197,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
   const startGame = useCallback((customCategories?: Category[]) => {
     let categoriesToUse: Category[];
 
-    if (customCategories) {
+    if (customCategories && Array.isArray(customCategories)) {
       categoriesToUse = customCategories;
     } else if (lastCategories) {
       categoriesToUse = lastCategories;
@@ -220,6 +226,11 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
       
     if (settings.hintsOn && bestCategory && bestCategory.id !== category.id && currentCountry.ranks[bestCategory.id] < rank) {
         try {
+            toast({
+                title: "Better pick available!",
+                description: `You could have picked "${bestCategory.name}" for a better score.`,
+                duration: 2000,
+            });
             const hintResult = await generateHint({
                 country: currentCountry.name,
                 selectedCategory: category.name,
@@ -235,7 +246,7 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     } else {
         dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
-  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn]);
+  }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn, toast]);
   
   const goToMenu = useCallback(() => dispatch({ type: 'GO_TO_MENU' }), []);
   const goToCustom = useCallback(() => dispatch({ type: 'GO_TO_CUSTOM' }), []);

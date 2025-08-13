@@ -203,43 +203,48 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     dispatch({ type: 'START_GAME', payload: { categories: categoriesToUse, rounds: categoriesToUse.length } });
   }, [lastCategories]);
 
-  const selectCategory = useCallback(async (category: Category) => {
-    if(state.gameState !== 'playing' || state.history[state.currentRoundIndex]) return;
+  const selectCategory = useCallback(async (selectedCategory: Category) => {
+    if (state.gameState !== 'playing' || state.history[state.currentRoundIndex]) return;
 
     const currentCountry = state.gameCountries[state.currentRoundIndex];
-    const rank = currentCountry.ranks[category.id];
+    const selectedRank = currentCountry.ranks[selectedCategory.id];
     
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
-    
     const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
+    
+    // Find the best possible pick from ALL available categories for this round
     const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
+    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     
-    const bestCategoryInRound = [...availableCategories]
-        .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+    // This is the important change: We check against the best pick from the *other* available choices
+    const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
+    const bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     
-    dispatch({ type: 'SELECT_CATEGORY', payload: { category, bestCategory: bestCategoryInRound } });
+    const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
 
-    if (settings.hintsOn && bestCategoryInRound && bestCategoryInRound.id !== category.id && currentCountry.ranks[bestCategoryInRound.id] < rank) {
-        try {
-            toast({
-                title: "Better pick available!",
-                description: `You could have picked "${bestCategoryInRound.name}" for a better score.`,
-                duration: 2000,
-            });
-            const hintResult = await generateHint({
-                country: currentCountry.name,
-                selectedCategory: category.name,
-                correctCategory: bestCategoryInRound.name,
-                countryRankingInSelectedCategory: rank,
-                countryRankingInCorrectCategory: currentCountry.ranks[bestCategoryInRound.id],
-            });
-            dispatch({ type: 'SET_HINT', payload: { hint: hintResult.hint } });
-        } catch(e) {
-            console.error("Error generating hint:", e);
-            dispatch({ type: 'SET_HINT', payload: { hint: "Could not generate a hint at this time." } });
-        }
+    dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
+
+    if (shouldShowHint) {
+      try {
+        toast({
+            title: "Better pick available!",
+            description: `You could have picked "${bestOtherCategory.name}" for a better score.`,
+            duration: 2000,
+        });
+        const hintResult = await generateHint({
+            country: currentCountry.name,
+            selectedCategory: selectedCategory.name,
+            correctCategory: bestOtherCategory.name,
+            countryRankingInSelectedCategory: selectedRank,
+            countryRankingInCorrectCategory: currentCountry.ranks[bestOtherCategory.id],
+        });
+        dispatch({ type: 'SET_HINT', payload: { hint: hintResult.hint } });
+      } catch (e) {
+        console.error("Error generating hint:", e);
+        dispatch({ type: 'SET_HINT', payload: { hint: "Could not generate a hint at this time." } });
+      }
     } else {
-        dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
+      dispatch({ type: 'SET_HINT_LOADING', payload: { loading: false } });
     }
   }, [state.gameState, state.currentRoundIndex, state.gameCountries, state.gameCategories, state.history, settings.hintsOn, toast]);
   

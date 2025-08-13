@@ -211,30 +211,27 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     
-    // Find all categories that haven't been used yet in the game
     const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
     const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
     
-    // Find the best category among ALL available (including the one just picked)
-    const bestCategoryOverall = [...availableCategories]
+    const bestCategoryInRound = [...availableCategories]
         .sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     
-    // Dispatch the action first to update the state
-    dispatch({ type: 'SELECT_CATEGORY', payload: { category, bestCategory: bestCategoryOverall } });
+    dispatch({ type: 'SELECT_CATEGORY', payload: { category, bestCategory: bestCategoryInRound } });
 
-    if (settings.hintsOn && bestCategoryOverall && bestCategoryOverall.id !== category.id && currentCountry.ranks[bestCategoryOverall.id] < rank) {
+    if (settings.hintsOn && bestCategoryInRound && bestCategoryInRound.id !== category.id && currentCountry.ranks[bestCategoryInRound.id] < rank) {
         try {
             toast({
                 title: "Better pick available!",
-                description: `You could have picked "${bestCategoryOverall.name}" for a better score.`,
+                description: `You could have picked "${bestCategoryInRound.name}" for a better score.`,
                 duration: 2000,
             });
             const hintResult = await generateHint({
                 country: currentCountry.name,
                 selectedCategory: category.name,
-                correctCategory: bestCategoryOverall.name,
+                correctCategory: bestCategoryInRound.name,
                 countryRankingInSelectedCategory: rank,
-                countryRankingInCorrectCategory: currentCountry.ranks[bestCategoryOverall.id],
+                countryRankingInCorrectCategory: currentCountry.ranks[bestCategoryInRound.id],
             });
             dispatch({ type: 'SET_HINT', payload: { hint: hintResult.hint } });
         } catch(e) {

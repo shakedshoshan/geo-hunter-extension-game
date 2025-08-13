@@ -17,9 +17,7 @@ type AchievementsScreenProps = {
 const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achievementsList[0], isUnlocked: boolean }) => (
     <div key={achievement.id} className={`flex items-center space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
         {isUnlocked ? (
-          <div className="relative h-12 w-12 rounded-md overflow-hidden flex-shrink-0">
-            <Image src={achievement.image} alt={achievement.title} fill style={{ objectFit: 'cover' }} data-ai-hint={achievement.imageHint} unoptimized/>
-          </div>
+          <img src={achievement.image} alt={achievement.title} data-ai-hint={achievement.imageHint} className="h-12 w-12 rounded-md object-cover flex-shrink-0" />
         ) : (
           <div className="flex items-center justify-center h-12 w-12 rounded-md bg-muted flex-shrink-0">
             <Lock className="h-6 w-6 text-muted-foreground" />

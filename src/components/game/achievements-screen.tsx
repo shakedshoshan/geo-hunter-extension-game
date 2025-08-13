@@ -1,20 +1,38 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Lock, ArrowLeft } from 'lucide-react';
 import { achievementsList } from '@/lib/achievements';
 import type { AchievementsState } from '@/hooks/use-achievements.tsx';
-import type { useGameState } from '@/hooks/use-game-state';
+import type { useGameState } from '@/hooks/use-game-state.tsx';
 
 type AchievementsScreenProps = {
   achievements: AchievementsState;
   goToMenu: ReturnType<typeof useGameState>['goToMenu'];
 };
 
+const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achievementsList[0], isUnlocked: boolean }) => (
+    <div key={achievement.id} className={`flex items-start space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
+        {isUnlocked ? (
+        <Trophy className="h-8 w-8 text-accent flex-shrink-0 mt-1" />
+        ) : (
+        <Lock className="h-8 w-8 text-muted-foreground flex-shrink-0 mt-1" />
+        )}
+        <div>
+        <h3 className={`font-semibold ${isUnlocked ? 'text-accent-foreground' : ''}`}>{achievement.title}</h3>
+        <p className="text-sm text-muted-foreground">{achievement.description}</p>
+        </div>
+    </div>
+);
+
+
 export const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ achievements, goToMenu }) => {
   const { unlockedIds, bestScore, gamesPlayed } = achievements;
+
+  const generalAchievements = achievementsList.filter(a => a.type === 'score' || a.type === 'games' || a.type === 'perfect');
+  const categoryAchievements = (count: number) => achievementsList.filter(a => a.type === 'categories' && a.threshold === count);
   
   return (
     <Card className="w-full max-w-md shadow-lg animate-in fade-in">
@@ -39,26 +57,35 @@ export const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ achievem
             </div>
         </div>
 
-        <ScrollArea className="h-72 w-full">
-          <div className="space-y-4 pr-4">
-            {achievementsList.map(ach => {
-              const isUnlocked = unlockedIds.has(ach.id);
-              return (
-                <div key={ach.id} className={`flex items-start space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
-                  {isUnlocked ? (
-                    <Trophy className="h-8 w-8 text-accent flex-shrink-0 mt-1" />
-                  ) : (
-                    <Lock className="h-8 w-8 text-muted-foreground flex-shrink-0 mt-1" />
-                  )}
-                  <div>
-                    <h3 className={`font-semibold ${isUnlocked ? 'text-accent-foreground' : ''}`}>{ach.title}</h3>
-                    <p className="text-sm text-muted-foreground">{ach.description}</p>
-                  </div>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto mb-2">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="4">4 Cats</TabsTrigger>
+            <TabsTrigger value="5">5 Cats</TabsTrigger>
+            <TabsTrigger value="6">6 Cats</TabsTrigger>
+            <TabsTrigger value="7">7 Cats</TabsTrigger>
+            <TabsTrigger value="8">8 Cats</TabsTrigger>
+          </TabsList>
+          
+          <ScrollArea className="h-72 w-full">
+            <TabsContent value="general">
+                <div className="space-y-4 pr-4">
+                {generalAchievements.map(ach => (
+                    <AchievementItem key={ach.id} achievement={ach} isUnlocked={unlockedIds.has(ach.id)} />
+                ))}
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+            </TabsContent>
+            {[4, 5, 6, 7, 8].map(catCount => (
+                <TabsContent value={String(catCount)} key={catCount}>
+                    <div className="space-y-4 pr-4">
+                    {categoryAchievements(catCount).map(ach => (
+                         <AchievementItem key={ach.id} achievement={ach} isUnlocked={unlockedIds.has(ach.id)} />
+                    ))}
+                    </div>
+                </TabsContent>
+            ))}
+          </ScrollArea>
+        </Tabs>
       </CardContent>
     </Card>
   );

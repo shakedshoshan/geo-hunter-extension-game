@@ -20,6 +20,7 @@ const defaultAchievements: AchievementsState = {
 export const useAchievements = () => {
   const [achievements, setAchievements] = useState<AchievementsState>(defaultAchievements);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [achievementsToToast, setAchievementsToToast] = useState<Achievement[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,11 +54,28 @@ export const useAchievements = () => {
     }
   }, [achievements, isLoaded]);
 
+  useEffect(() => {
+    if (achievementsToToast.length > 0) {
+      achievementsToToast.forEach(a => {
+        toast({
+          title: (
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-accent" />
+              <span>Achievement Unlocked!</span>
+            </div>
+          ),
+          description: a.title,
+        });
+      });
+      setAchievementsToToast([]); // Clear the queue
+    }
+  }, [achievementsToToast, toast]);
+
   const checkAndUnlockAchievements = useCallback((finalScore: number) => {
     setAchievements(prev => {
         const updatedGamesPlayed = prev.gamesPlayed + 1;
         const newUnlockedIds = new Set(prev.unlockedIds);
-        const achievementsToToast: Achievement[] = [];
+        const newAchievements: Achievement[] = [];
 
         achievementsList.forEach(achievement => {
         if (newUnlockedIds.has(achievement.id)) return;
@@ -72,22 +90,12 @@ export const useAchievements = () => {
 
         if (unlocked) {
             newUnlockedIds.add(achievement.id);
-            achievementsToToast.push(achievement);
+            newAchievements.push(achievement);
         }
         });
 
-        if (achievementsToToast.length > 0) {
-            achievementsToToast.forEach(a => {
-                toast({
-                title: (
-                    <div className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-accent" />
-                    <span>Achievement Unlocked!</span>
-                    </div>
-                ),
-                description: a.title,
-                });
-            });
+        if (newAchievements.length > 0) {
+            setAchievementsToToast(newAchievements);
         }
         
         return {
@@ -96,7 +104,7 @@ export const useAchievements = () => {
             bestScore: prev.bestScore === null ? finalScore : Math.min(prev.bestScore, finalScore),
         };
     });
-  }, [toast]);
+  }, []);
 
   return {
     achievements,

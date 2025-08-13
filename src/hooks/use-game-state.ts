@@ -211,24 +211,24 @@ export const useGameState = ({ settings, achievements, checkAndUnlockAchievement
     
     const gameCategories = Array.isArray(state.gameCategories) ? state.gameCategories : [];
     const usedCategoryIds = new Set(state.history.map(h => h.selectedCategory.id));
-    
-    // Find the best possible pick from ALL available categories for this round
     const availableCategories = gameCategories.filter(c => !usedCategoryIds.has(c.id));
-    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
     
-    // This is the important change: We check against the best pick from the *other* available choices
+    // Find the best possible pick from the *other* available choices
     const otherAvailableCategories = availableCategories.filter(c => c.id !== selectedCategory.id);
     const bestOtherCategory = otherAvailableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
+    const bestOtherRank = bestOtherCategory ? currentCountry.ranks[bestOtherCategory.id] : Infinity;
     
-    const shouldShowHint = settings.hintsOn && bestOtherCategory && currentCountry.ranks[bestOtherCategory.id] < selectedRank;
+    const shouldShowHint = settings.hintsOn && bestOtherCategory && bestOtherRank < selectedRank;
+
+    // Find the best category in the round for history/results purposes
+    const bestCategoryInRound = availableCategories.sort((a, b) => currentCountry.ranks[a.id] - currentCountry.ranks[b.id])[0];
 
     dispatch({ type: 'SELECT_CATEGORY', payload: { category: selectedCategory, bestCategory: bestCategoryInRound } });
 
     if (shouldShowHint) {
       try {
         toast({
-            title: "Better pick available!",
-            description: `You could have picked "${bestOtherCategory.name}" for a better score.`,
+            title: `Better pick: ${bestOtherCategory.name} (#${bestOtherRank})`,
             duration: 2000,
         });
         const hintResult = await generateHint({

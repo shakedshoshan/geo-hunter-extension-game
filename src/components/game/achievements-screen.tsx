@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,15 +15,19 @@ type AchievementsScreenProps = {
 };
 
 const AchievementItem = ({ achievement, isUnlocked }: { achievement: typeof achievementsList[0], isUnlocked: boolean }) => (
-    <div key={achievement.id} className={`flex items-start space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
+    <div key={achievement.id} className={`flex items-center space-x-4 p-4 rounded-lg border ${isUnlocked ? 'border-accent/50 bg-accent/10' : 'bg-muted/50'}`}>
         {isUnlocked ? (
-        <Trophy className="h-8 w-8 text-accent flex-shrink-0 mt-1" />
+          <div className="relative h-12 w-12 rounded-md overflow-hidden flex-shrink-0">
+            <Image src={achievement.image} alt={achievement.title} fill style={{ objectFit: 'cover' }} data-ai-hint={achievement.imageHint} unoptimized/>
+          </div>
         ) : (
-        <Lock className="h-8 w-8 text-muted-foreground flex-shrink-0 mt-1" />
+          <div className="flex items-center justify-center h-12 w-12 rounded-md bg-muted flex-shrink-0">
+            <Lock className="h-6 w-6 text-muted-foreground" />
+          </div>
         )}
-        <div>
-        <h3 className={`font-semibold ${isUnlocked ? 'text-accent-foreground' : ''}`}>{achievement.title}</h3>
-        <p className="text-sm text-muted-foreground">{achievement.description}</p>
+        <div className="flex-grow">
+          <h3 className={`font-semibold ${isUnlocked ? 'text-accent-foreground' : ''}`}>{achievement.title}</h3>
+          <p className="text-sm text-muted-foreground">{achievement.description}</p>
         </div>
     </div>
 );

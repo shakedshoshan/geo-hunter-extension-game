@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { achievementsList, Achievement } from '@/lib/achievements';
 import { Trophy } from 'lucide-react';
@@ -59,12 +60,19 @@ export const useAchievements = () => {
       achievementsToToast.forEach(a => {
         toast({
           title: (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 font-bold">
               <Trophy className="h-5 w-5 text-accent" />
               <span>Achievement Unlocked!</span>
             </div>
           ),
-          description: a.title,
+          description: (
+            <div className="flex items-center gap-3 mt-2">
+               <div className="relative h-10 w-10 rounded-md overflow-hidden flex-shrink-0">
+                 <Image src={a.image} alt={a.title} fill style={{ objectFit: 'cover' }} data-ai-hint={a.imageHint} unoptimized />
+               </div>
+               <span className="font-semibold">{a.title}</span>
+            </div>
+          ),
         });
       });
       setAchievementsToToast([]); // Clear the queue

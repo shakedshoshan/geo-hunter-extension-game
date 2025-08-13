@@ -38,7 +38,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
     const { selectedCategory, score: roundScore, bestCategory, hint, hintLoading } = roundResult;
     const isBestPick = selectedCategory.id === bestCategory?.id;
-    const displayScore = (s: number) => s > 100 ? "100+" : s;
 
     return (
       <div className="mt-4 space-y-4 animate-in fade-in">
@@ -48,7 +47,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {isBestPick ? "Perfect Pick!" : "Good Try!"}
           </AlertTitle>
           <AlertDescription>
-            Your score for this round is {displayScore(roundScore)}. Moving to the next round...
+            Your score for this round is {roundScore}. Moving to the next round...
           </AlertDescription>
         </Alert>
 
@@ -116,7 +115,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                         <div className="relative w-6 h-6 rounded-full overflow-hidden">
                            <Image src={roundForCategory.country.flag} alt={roundForCategory.country.name} fill style={{ objectFit: 'cover' }} unoptimized/>
                         </div>
-                        <Badge variant="outline">#{roundForCategory.score > 100 ? "100+" : roundForCategory.score}</Badge>
+                        <Badge variant="outline">#{roundForCategory.score}</Badge>
                     </div>
                   )}
                 </Button>
